@@ -1,0 +1,29 @@
+{
+  "name": "node-pokespotter",
+  "version": "0.0.1",
+  "description": "Node module for finding Pokemon in Pokemon Go",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brentschooley/pokespotter.git"
+  },
+  "keywords": [
+    "pokemon",
+    "pokemon",
+    "go"
+  ],
+  "author": "Brent Schooley and Dominik Kundel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/brentschooley/pokespotter/issues"
+  },
+  "homepage": "https://github.com/brentschooley/pokespotter#readme",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "pokemon-go-node-api": "^1.4.0"
+  }
+}
