@@ -1,56 +1,73 @@
 'use strict';
 
+var Q = require('q');
 var PokemonGO = require('pokemon-go-node-api');
 
-// using var so you can login with multiple users
-var a = new PokemonGO.Pokeio();
+function convertPokemon(input, currentTime) {
+  var result = {};
+  result.longitude = input.Longitude;
+  result.latitude = input.Latitude;
+  result.expiration_time = Math.round((currentTime + input.TimeTillHiddenMs) / 1000);
+  result.pokemonId = input.pokemon ? input.pokemon.PokemonId : null;
 
-//Set environment variables or replace placeholder text
-var location = {
-    type: 'name',
-    name: process.env.PGO_LOCATION || ''
-};
+  return result;
+}
 
-var username = process.env.PGO_USERNAME || '';
-var password = process.env.PGO_PASSWORD || '';
-var provider = process.env.PGO_PROVIDER || '';
+function Pokespotter(username, password, provider) {
+  if (!username || !password) {
+    throw new Error('You need to pass a username and password');
+  }
 
-a.init(username, password, location, provider, function(err) {
-    if (err) throw err;
+  var CONFIG = {
+    username: username,
+    password: password,
+    provider: provider || 'google'
+  };
 
-    console.log('1[i] Current location: ' + a.playerInfo.locationName);
-    console.log('1[i] lat/long/alt: : ' + a.playerInfo.latitude + ' ' + a.playerInfo.longitude + ' ' + a.playerInfo.altitude);
-
-    a.GetProfile(function(err, profile) {
-        if (err) throw err;
-
-        console.log('1[i] Username: ' + profile.username);
-        console.log('1[i] Poke Storage: ' + profile.poke_storage);
-        console.log('1[i] Item Storage: ' + profile.item_storage);
-
-        var poke = 0;
-        if (profile.currency[0].amount) {
-            poke = profile.currency[0].amount;
+  function get(location) {
+    return Q.Promise(function (resolve, reject) {
+      if (!location.longitude || !location.latitude) {
+        return reject(new Error('Invalid coordinates. Must contain longitude and latitude'));
+      }
+      
+      var api = new PokemonGO.Pokeio();
+      var locationWrapper = {
+        type: 'coords',
+        coords: location
+      };
+      
+      api.init(username, password, locationWrapper, provider, function (err) {
+        if (err) {
+          return reject(err);
         }
 
-        console.log('1[i] Pokecoin: ' + poke);
-        console.log('1[i] Stardust: ' + profile.currency[1].amount);
+        var pokemonFound = [];
+        var currentTime = Date.now();
 
-        setInterval(function(){
-            a.Heartbeat(function(err,hb) {
-                if(err) {
-                    console.log(err);
-                }
+        api.Heartbeat(function (err, hb) {
+          if (err) {
+            return reject(err);
+          }
 
-                hb.cells.forEach(function (cell) {
-                   cell.WildPokemon.forEach(function (pokemon) {
-                       console.log(pokemon);
-                   });
+          if (hb && Array.isArray(hb.cells)) {
+            hb.cells.forEach(function (cell) {
+              if (cell && Array.isArray(cell.WildPokemon)) {
+                cell.WildPokemon.forEach(function (pokemon) {
+                  pokemonFound.push(convertPokemon(pokemon, currentTime));
                 });
-
+              }
             });
-        }, 5000);
+          }
 
+          resolve(pokemonFound);
+        });
+      })
     });
-});
+  }
 
+  return {
+    get: get
+  };
+}
+
+module.exports = Pokespotter;
