@@ -1,34 +1,89 @@
 'use strict';
 
+///
+/// EXTERNAL DEPENDENCIES
+///
+
 var Q = require('q');
 var PokemonGO = require('pokemon-go-node-api');
 var _ = require('lodash');
 
+var api = new PokemonGO.Pokeio();
+
+///
+/// HELPERS
+///
+
 var geo = require('./lib/geo-helper');
+var utils = require('./lib/utils');
+var locWrap = utils.locWrap;
+var convertPokemon = utils.convertPokemon;
 
-function convertPokemon(input, currentTime) {
-  var result = {};
-  result.spawnPointId = input.SpawnPointId;
-  result.longitude = input.Longitude;
-  result.latitude = input.Latitude;
-  result.expiration_time = Math.round((currentTime + input.TimeTillHiddenMs) / 1000);
-  result.pokemonId = input.pokemon ? input.pokemon.PokemonId : null;
-  if (!result.pokemonId && input.PokedexTypeId) {
-    result.pokemonId = input.PokedexTypeId
-  }
-  var pokeInfo = PokemonGO.pokemonlist[result.pokemonId - 1];
-  if (pokeInfo) {
-    result.name = pokeInfo.name;
-  }
-  return result;
+var IS_LOGGED_IN = false;
+
+///
+/// API INTERACTION
+///
+
+function logIn(config, location) {
+  return Q.Promise(function (resolve, reject) {
+    if (IS_LOGGED_IN) {
+      return resolve();
+    }
+    api.init(config.username, config.password, locWrap(location), config.provider, function (err) {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
+  });
 }
 
-function locWrap(location) {
-  return {
-    type: 'coords',
-    coords: location
-  };
+function getPokemon(currentTime) {
+  return function() {
+    return Q.Promise(function (resolve, reject) {
+      var pokemonFound = [];
+      api.Heartbeat(function (err, hb) {
+        if (err) {
+          return reject(err);
+        }
+
+        if (hb && Array.isArray(hb.cells)) {
+          hb.cells.forEach(function (cell) {
+            if (cell && Array.isArray(cell.WildPokemon)) {
+              cell.WildPokemon.forEach(function (pokemon) {
+                pokemonFound.push(convertPokemon(pokemon, currentTime));
+              });
+            }
+
+            if (cell && Array.isArray(cell.MapPokemon)) {
+              cell.MapPokemon.forEach(function (pokemon) {
+                pokemonFound.push(convertPokemon(pokemon, currentTime));
+              });
+            }
+          });
+        }
+
+        resolve(pokemonFound);
+      });
+    });
+  }
 }
+
+function setLocation(stepLocation) {
+  return Q.Promise(function (resolve, reject) {
+    api.SetLocation(locWrap(stepLocation), function (err, c) {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
+  });
+}
+
+///
+/// MODULE
+///
 
 function Pokespotter(username, password, provider) {
   if (!username || !password) {
@@ -44,86 +99,36 @@ function Pokespotter(username, password, provider) {
   function get(location, steps) {
     steps = steps || 1;
 
-    return Q.Promise(function (resolve, reject) {
-      if (!location.longitude || !location.latitude) {
-        return reject(new Error('Invalid coordinates. Must contain longitude and latitude'));
-      }
-      
-      var api = new PokemonGO.Pokeio();
-      var locations = geo.getCoordinatesForSteps(location, steps);
+    if (!location.longitude || !location.latitude) {
+      return reject(new Error('Invalid coordinates. Must contain longitude and latitude'));
+    }
+    
+    var locations = geo.getCoordinatesForSteps(location, steps);
 
-      function getPokemon(currentTime) {
-        return function() {
-          return Q.Promise(function (resolve, reject) {
-            var pokemonFound = [];
-            api.Heartbeat(function (err, hb) {
-              if (err) {
-                return reject(err);
-              }
+    return logIn(CONFIG, locations[0]).then(function () {
+      var currentTime = Date.now();
+      var pokemonFound = [];
 
-              if (hb && Array.isArray(hb.cells)) {
-                hb.cells.forEach(function (cell) {
-                  if (cell && Array.isArray(cell.WildPokemon)) {
-                    cell.WildPokemon.forEach(function (pokemon) {
-                      pokemonFound.push(convertPokemon(pokemon, currentTime));
-                    });
-                  }
-
-                  if (cell && Array.isArray(cell.MapPokemon)) {
-                    cell.MapPokemon.forEach(function (pokemon) {
-                      pokemonFound.push(convertPokemon(pokemon, currentTime));
-                    });
-                  }
-                });
-              }
-
-              resolve(pokemonFound);
-            });
-          });
-        }
-      }
-
-      function setLocation(stepLocation) {
-        return Q.Promise(function (resolve, reject) {
-          api.SetLocation(locWrap(stepLocation), function (err, c) {
-            if (err) {
-              return reject(err);
-            }
-            resolve();
-          });
+      function visitLocations() {
+        var p = Q();
+        locations.forEach(function (stepLocation) {
+          p = p.then(function () { 
+            return setLocation(stepLocation)
+              .then(getPokemon(currentTime))
+              .then(function (found) {
+                pokemonFound.push(found);
+                return true;
+              }); 
+            })
         });
+        return p;
       }
 
-      api.init(username, password, locWrap(locations[0]), provider, function (err) {
-        if (err) {
-          return reject(err);
-        }
-        var currentTime = Date.now();
-        var pokemonFound = [];
-
-        function visitLocations() {
-          var p = Q();
-          locations.forEach(function (stepLocation) {
-            p = p.then(function () { 
-              return setLocation(stepLocation)
-                .then(getPokemon(currentTime))
-                .then(function (found) {
-                  pokemonFound.push(found);
-                  return true;
-                }); 
-              })
-          });
-          return p;
-        }
-
-        visitLocations().then(function () {
-          var result = _.chain(pokemonFound).flatten().uniqWith(function (a, b) {
-            return a.spawnPointId === b.spawnPointId && a.pokemonId === b.pokemonId;
-          }).value();
-          resolve(result);
-        }).catch(function (err) {
-          reject(err);
-        });
+      return visitLocations().then(function () {
+        var result = _.chain(pokemonFound).flatten().uniqWith(function (a, b) {
+          return a.spawnPointId === b.spawnPointId && a.pokemonId === b.pokemonId;
+        }).value();
+        return result
       })
     });
   }
@@ -134,3 +139,4 @@ function Pokespotter(username, password, provider) {
 }
 
 module.exports = Pokespotter;
+

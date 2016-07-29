@@ -4,9 +4,14 @@ var username = process.env.PGO_USERNAME || '';
 var password = process.env.PGO_PASSWORD || '';
 var provider = process.env.PGO_PROVIDER || '';
 
+// var location = {
+//   latitude: 37.78345180814602,
+//   longitude: -122.39628374576567
+// };
+
 var location = {
-  latitude: 37.78345180814602,
-  longitude: -122.39628374576567
+  latitude: 39.977335,
+  longitude: -75.123887
 };
 
 var stepsInEachDirection = 3;
