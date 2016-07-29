@@ -1,5 +1,5 @@
 {
-  "name": "node-pokespotter",
+  "name": "pokespotter",
   "version": "0.0.1",
   "description": "Node module for finding Pokemon in Pokemon Go",
   "main": "index.js",
@@ -16,7 +16,7 @@
     "go"
   ],
   "author": "Brent Schooley and Dominik Kundel",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/brentschooley/pokespotter/issues"
   },
