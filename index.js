@@ -10,6 +10,7 @@ var _ = require('lodash');
 var geocoder = require('node-geocoder')({ provider: 'openstreetmap' });
 
 var api = new PokemonGO.Pokeio();
+api.playerInfo.debug = false;
 
 ///
 /// HELPERS
@@ -98,6 +99,9 @@ function setLocation(stepLocation, options) {
  * @returns Pokespotter instance
  */
 function Pokespotter(username, password, provider) {
+  if (username || password || provider) {
+    console.warn("You should save your Pokemon GO credentials in Environment variables rather than passing them in the code.\nStore them as PGO_USERNAME, PGO_PASSWORD, and PGO_PROVIDER and you don't have to pass them anymore.");
+  }
   var CONFIG = {
     username: username || process.env.PGO_USERNAME,
     password: password || process.env.PGO_PASSWORD,
@@ -181,4 +185,5 @@ function Pokespotter(username, password, provider) {
 
 module.exports = Pokespotter;
 module.exports.Pokespotter = Pokespotter;
+module.exports.Pokedex = utils.Pokedex;
 
