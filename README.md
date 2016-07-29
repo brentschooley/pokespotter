@@ -106,9 +106,9 @@ Array of all Pokemon with their Pokedex number as index.
 
 # Shoutouts and Thanks
 
-Python API work by [tejado](https://github.com/tejado/pokemongo-api-demo)
-Node library we based our work on by [Armax](https://github.com/Armax/Pokemon-GO-node-api)
-Pokemon Go Map code we learned from by [AHAAAAAAA](https://github.com/AHAAAAAAA/PokemonGo-Map)
+* Python API work by [tejado](https://github.com/tejado/pokemongo-api-demo)
+* Node library we based our work on by [Armax](https://github.com/Armax/Pokemon-GO-node-api)
+* Pokemon Go Map code we learned from by [AHAAAAAAA](https://github.com/AHAAAAAAA/PokemonGo-Map)
 
 # Disclaimer
 
