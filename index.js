@@ -86,6 +86,17 @@ function setLocation(stepLocation, options) {
 /// MODULE
 ///
 
+
+/**
+ * Initializer for Pokespotter.
+ * Credentials can be passed as arguments or stored in the ENV variables:
+ * PGO_USERNAME, PGO_PASSWORD, PGO_PROVIDER
+ * 
+ * @param {string} username Your Pokemon GO / Google username
+ * @param {string} password Your Pokemon Go / Google password
+ * @param {string} provider Can be 'ptc' or 'google'
+ * @returns Pokespotter instance
+ */
 function Pokespotter(username, password, provider) {
   var CONFIG = {
     username: username || process.env.PGO_USERNAME,
@@ -97,6 +108,18 @@ function Pokespotter(username, password, provider) {
     throw new Error('You need to pass a username and password');
   }
 
+  
+  /**
+   * Gets all the Pokemon around a certain location.
+   * The location can be latitude, longitude or an address that will be checked with openstreetmap
+   * The options are:
+   *  - steps: How much you should step in each direction
+   *  - requestDelay: Artificially delays execution of calls to avoid limitations of API
+   * 
+   * @param {string | {latitude, longitude}} location The central location to check
+   * @param {{steps, requestDelay}} options Alter behavior of the call
+   * @returns
+   */
   function get(location, options) {
     options = _.defaults(options, {
       steps: 1,
@@ -152,9 +175,10 @@ function Pokespotter(username, password, provider) {
 
   return {
     get: get,
-    getNearBy: get
+    getNearby: get
   };
 }
 
 module.exports = Pokespotter;
+module.exports.Pokespotter = Pokespotter;
 

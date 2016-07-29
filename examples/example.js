@@ -9,7 +9,7 @@ var provider = process.env.PGO_PROVIDER || '';
 //   longitude: -122.39628374576567
 // };
 
-var location = 'Alexanderplatz, Berlin' /*{
+var location = 'Central Park, New York' /*{
   latitude: 39.977335,
   longitude: -75.123887
 };*/
