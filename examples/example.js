@@ -5,14 +5,23 @@ var password = process.env.PGO_PASSWORD || '';
 var provider = process.env.PGO_PROVIDER || '';
 
 var location = {
-  latitude: 52.52376761438714,
-  longitude: 13.411720991134644
+  latitude: 37.78345180814602,
+  longitude: -122.39628374576567
 };
+
+var stepsInEachDirection = 3;
 
 var Pokespotter = require('../')(username, password, provider);
 
-Pokespotter.get(location).then(function (pokemon) {
-  console.log(pokemon);
+Pokespotter.get(location, stepsInEachDirection).then(function (pokemon) {
+  console.log('hey');
+  pokemon.forEach(function(p) {
+    console.log(p.pokemonId, p.spawnPointId, p.name);
+  })
 }).catch(function (err) {
   console.error(err);
 })
+
+// var geo = require('../lib/geo-helper');
+
+// console.log(geo.getCoordinatesForSteps(location, 3));
