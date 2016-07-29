@@ -63,6 +63,19 @@ The location can be latitude, longitude or an address that will be checked with 
 ### `getNearby(location, options)` ⇒ `Promise<`[`Pokemon`](#pokemon)`[]>`
 Alias for [`get(location, options)`](#getlocation-options--promisepokemon)
 
+## `Pokedex`
+
+Array of all Pokemon with their Pokedex number as index.
+
+## `getMapsUrl()` ⇒ string
+
+| Param | Type | Description |
+| --- | --- | --- |
+| center | `string` or [`Location`](#location) | Central location of the map |
+| pokemon | [`Pokemon`](#pokemon)`[]` | List of Pokemon to mark on the map |
+| steps | `number` | The amount of steps used to search |
+| size | `string` | Size of the map. Default `512x512` |
+
 ## Types
 
 ### `Location`

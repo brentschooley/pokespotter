@@ -186,4 +186,5 @@ function Pokespotter(username, password, provider) {
 module.exports = Pokespotter;
 module.exports.Pokespotter = Pokespotter;
 module.exports.Pokedex = utils.Pokedex;
+module.exports.getMapsUrl = utils.getMapsUrl;
 
