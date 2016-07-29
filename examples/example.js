@@ -18,7 +18,10 @@ var stepsInEachDirection = 2;
 
 var Pokespotter = require('../')(username, password, provider);
 
-Pokespotter.get(location, stepsInEachDirection).then(function (pokemon) {
+Pokespotter.get(location, {
+  steps: stepsInEachDirection,
+  requestDelay: 0
+}).then(function (pokemon) {
   pokemon.forEach(function(p) {
     console.log(p.pokemonId, p.spawnPointId, p.name, p.distance + 'm');
   })

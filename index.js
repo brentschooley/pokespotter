@@ -40,41 +40,45 @@ function logIn(config, location) {
   });
 }
 
-function getPokemon(currentTime, baseLocation) {
+function getPokemon(currentTime, baseLocation, options) {
   return function() {
     return Q.Promise(function (resolve, reject) {
-      var pokemonFound = [];
-      api.Heartbeat(function (err, hb) {
-        if (err) {
-          return reject(err);
-        }
+      setTimeout(function () {
+        var pokemonFound = [];
+        api.Heartbeat(function (err, hb) {
+          if (err) {
+            return reject(err);
+          }
 
-        if (hb && Array.isArray(hb.cells)) {
-          hb.cells.forEach(function (cell) {
-            ['WildPokemon', 'MapPokemon'].forEach(function (pokeType) {
-              if (cell && Array.isArray(cell[pokeType])) {
-                cell[pokeType].forEach(function (pokemon) {
-                  pokemonFound.push(convertPokemon(pokemon, currentTime, baseLocation));
-                });
-              }
+          if (hb && Array.isArray(hb.cells)) {
+            hb.cells.forEach(function (cell) {
+              ['WildPokemon', 'MapPokemon'].forEach(function (pokeType) {
+                if (cell && Array.isArray(cell[pokeType])) {
+                  cell[pokeType].forEach(function (pokemon) {
+                    pokemonFound.push(convertPokemon(pokemon, currentTime, baseLocation));
+                  });
+                }
+              });
             });
-          });
-        }
+          }
 
-        resolve(pokemonFound);
-      });
+          resolve(pokemonFound);
+        });
+      }, options.requestDelay);
     });
   }
 }
 
-function setLocation(stepLocation) {
+function setLocation(stepLocation, options) {
   return Q.Promise(function (resolve, reject) {
-    api.SetLocation(locWrap(stepLocation), function (err, c) {
-      if (err) {
-        return reject(err);
-      }
-      resolve();
-    });
+    setTimeout(function () {
+      api.SetLocation(locWrap(stepLocation), function (err, c) {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      });
+    }, options.requestDelay);
   });
 }
 
@@ -93,8 +97,11 @@ function Pokespotter(username, password, provider) {
     throw new Error('You need to pass a username and password');
   }
 
-  function get(location, steps) {
-    steps = steps || 1;
+  function get(location, options) {
+    options = _.defaults(options, {
+      steps: 1,
+      requestDelay: 0
+    });
 
     var getLocation;
     if (typeof location === 'string') {
@@ -112,7 +119,7 @@ function Pokespotter(username, password, provider) {
     }
 
     return getLocation.then(function (baseLocation) {
-      var locations = geo.getCoordinatesForSteps(baseLocation, steps);
+      var locations = geo.getCoordinatesForSteps(baseLocation, options.steps);
 
       return logIn(CONFIG, locations[0]).then(function () {
         var currentTime = Date.now();
@@ -122,8 +129,8 @@ function Pokespotter(username, password, provider) {
           var p = Q();
           locations.forEach(function (stepLocation) {
             p = p.then(function () { 
-              return setLocation(stepLocation)
-                .then(getPokemon(currentTime, baseLocation))
+              return setLocation(stepLocation, options)
+                .then(getPokemon(currentTime, baseLocation, options))
                 .then(function (found) {
                   pokemonFound.push(found);
                   return true;
