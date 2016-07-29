@@ -48,7 +48,7 @@ PGO_USERNAME, PGO_PASSWORD, PGO_PROVIDER
 | PGO_PASSWORD | `string` | Your Pokemon GO / Google password |
 | PGO_PROVIDER | `string` | 'ptc' for Pokemon Trainer Club or 'google' for Google |
 
-## `Pokespotter` methods 
+## `Pokespotter` methods
 
 ### `get(location, options)` ⇒ `Promise<Pokemon[]>`
 
@@ -106,7 +106,7 @@ Array of all Pokemon with their Pokedex number as index.
 
 # Disclaimer
 
-The used API wrapper uses an inofficial Niantic API. They might block you for using this. Therefore it is not recommended to use this or any other API with your actual account.
+The used API wrapper uses an unofficial Niantic API. They might block you for using this. Therefore it is not recommended to use this or any other API with your actual account.
 
 # Contributors
 
