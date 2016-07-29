@@ -14,14 +14,13 @@ var location = 'Alexanderplatz, Berlin' /*{
   longitude: -75.123887
 };*/
 
-var stepsInEachDirection = 3;
+var stepsInEachDirection = 2;
 
 var Pokespotter = require('../')(username, password, provider);
 
 Pokespotter.get(location, stepsInEachDirection).then(function (pokemon) {
-  console.log('hey');
   pokemon.forEach(function(p) {
-    console.log(p.pokemonId, p.spawnPointId, p.name);
+    console.log(p.pokemonId, p.spawnPointId, p.name, p.distance + 'm');
   })
 }).catch(function (err) {
   console.error(err);

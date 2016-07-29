@@ -40,29 +40,24 @@ function logIn(config, location) {
   });
 }
 
-function getPokemon(currentTime) {
+function getPokemon(currentTime, baseLocation) {
   return function() {
     return Q.Promise(function (resolve, reject) {
       var pokemonFound = [];
       api.Heartbeat(function (err, hb) {
-        console.log('get');
         if (err) {
           return reject(err);
         }
 
         if (hb && Array.isArray(hb.cells)) {
           hb.cells.forEach(function (cell) {
-            if (cell && Array.isArray(cell.WildPokemon)) {
-              cell.WildPokemon.forEach(function (pokemon) {
-                pokemonFound.push(convertPokemon(pokemon, currentTime));
-              });
-            }
-
-            if (cell && Array.isArray(cell.MapPokemon)) {
-              cell.MapPokemon.forEach(function (pokemon) {
-                pokemonFound.push(convertPokemon(pokemon, currentTime));
-              });
-            }
+            ['WildPokemon', 'MapPokemon'].forEach(function (pokeType) {
+              if (cell && Array.isArray(cell[pokeType])) {
+                cell[pokeType].forEach(function (pokemon) {
+                  pokemonFound.push(convertPokemon(pokemon, currentTime, baseLocation));
+                });
+              }
+            });
           });
         }
 
@@ -75,7 +70,6 @@ function getPokemon(currentTime) {
 function setLocation(stepLocation) {
   return Q.Promise(function (resolve, reject) {
     api.SetLocation(locWrap(stepLocation), function (err, c) {
-      console.log('go');
       if (err) {
         return reject(err);
       }
@@ -89,15 +83,15 @@ function setLocation(stepLocation) {
 ///
 
 function Pokespotter(username, password, provider) {
-  if (!username || !password) {
+  var CONFIG = {
+    username: username || process.env.PGO_USERNAME,
+    password: password || process.env.PGO_PASSWORD,
+    provider: provider || process.env.PGO_PROVIDER || 'google'
+  };
+
+  if (!CONFIG.username || !CONFIG.password) {
     throw new Error('You need to pass a username and password');
   }
-
-  var CONFIG = {
-    username: username,
-    password: password,
-    provider: provider || 'google'
-  };
 
   function get(location, steps) {
     steps = steps || 1;
@@ -117,8 +111,8 @@ function Pokespotter(username, password, provider) {
       return Q.reject(new Error('Invalid coordinates. Must contain longitude and latitude'));
     }
 
-    return getLocation.then(function (loc) {
-      var locations = geo.getCoordinatesForSteps(loc, steps);
+    return getLocation.then(function (baseLocation) {
+      var locations = geo.getCoordinatesForSteps(baseLocation, steps);
 
       return logIn(CONFIG, locations[0]).then(function () {
         var currentTime = Date.now();
@@ -129,7 +123,7 @@ function Pokespotter(username, password, provider) {
           locations.forEach(function (stepLocation) {
             p = p.then(function () { 
               return setLocation(stepLocation)
-                .then(getPokemon(currentTime))
+                .then(getPokemon(currentTime, baseLocation))
                 .then(function (found) {
                   pokemonFound.push(found);
                   return true;
