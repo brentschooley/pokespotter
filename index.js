@@ -7,6 +7,7 @@
 var Q = require('q');
 var PokemonGO = require('pokemon-go-node-api');
 var _ = require('lodash');
+var geocoder = require('node-geocoder')({ provider: 'openstreetmap' });
 
 var api = new PokemonGO.Pokeio();
 
@@ -44,6 +45,7 @@ function getPokemon(currentTime) {
     return Q.Promise(function (resolve, reject) {
       var pokemonFound = [];
       api.Heartbeat(function (err, hb) {
+        console.log('get');
         if (err) {
           return reject(err);
         }
@@ -73,6 +75,7 @@ function getPokemon(currentTime) {
 function setLocation(stepLocation) {
   return Q.Promise(function (resolve, reject) {
     api.SetLocation(locWrap(stepLocation), function (err, c) {
+      console.log('go');
       if (err) {
         return reject(err);
       }
@@ -99,37 +102,50 @@ function Pokespotter(username, password, provider) {
   function get(location, steps) {
     steps = steps || 1;
 
-    if (!location.longitude || !location.latitude) {
-      return reject(new Error('Invalid coordinates. Must contain longitude and latitude'));
+    var getLocation;
+    if (typeof location === 'string') {
+      getLocation = geocoder.geocode(location).then(function (result) {
+        result = result[0] || { longitude: 0, latitude: 0 };
+        return {
+          longitude: result.longitude,
+          latitude: result.latitude
+        };
+      });
+    } else if (location.longitude && location.latitude) {
+      getLocation = Q.when(location);
+    } else {
+      return Q.reject(new Error('Invalid coordinates. Must contain longitude and latitude'));
     }
-    
-    var locations = geo.getCoordinatesForSteps(location, steps);
 
-    return logIn(CONFIG, locations[0]).then(function () {
-      var currentTime = Date.now();
-      var pokemonFound = [];
+    return getLocation.then(function (loc) {
+      var locations = geo.getCoordinatesForSteps(loc, steps);
 
-      function visitLocations() {
-        var p = Q();
-        locations.forEach(function (stepLocation) {
-          p = p.then(function () { 
-            return setLocation(stepLocation)
-              .then(getPokemon(currentTime))
-              .then(function (found) {
-                pokemonFound.push(found);
-                return true;
-              }); 
-            })
+      return logIn(CONFIG, locations[0]).then(function () {
+        var currentTime = Date.now();
+        var pokemonFound = [];
+
+        function visitLocations() {
+          var p = Q();
+          locations.forEach(function (stepLocation) {
+            p = p.then(function () { 
+              return setLocation(stepLocation)
+                .then(getPokemon(currentTime))
+                .then(function (found) {
+                  pokemonFound.push(found);
+                  return true;
+                }); 
+              })
+          });
+          return p;
+        }
+
+        return visitLocations().then(function () {
+          var result = _.chain(pokemonFound).flatten().uniqWith(function (a, b) {
+            return a.spawnPointId === b.spawnPointId && a.pokemonId === b.pokemonId;
+          }).value();
+          return result
         });
-        return p;
-      }
-
-      return visitLocations().then(function () {
-        var result = _.chain(pokemonFound).flatten().uniqWith(function (a, b) {
-          return a.spawnPointId === b.spawnPointId && a.pokemonId === b.pokemonId;
-        }).value();
-        return result
-      })
+      });
     });
   }
 

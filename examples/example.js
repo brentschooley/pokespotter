@@ -9,10 +9,10 @@ var provider = process.env.PGO_PROVIDER || '';
 //   longitude: -122.39628374576567
 // };
 
-var location = {
+var location = 'Alexanderplatz, Berlin' /*{
   latitude: 39.977335,
   longitude: -75.123887
-};
+};*/
 
 var stepsInEachDirection = 3;
 
