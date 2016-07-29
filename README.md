@@ -104,6 +104,12 @@ Array of all Pokemon with their Pokedex number as index.
 | name | `string` | English name of Pokemon |
 | distance | `number` | Distance in meters to the requested location |
 
+# Shoutouts and Thanks
+
+Python API work by [tejado](https://github.com/tejado/pokemongo-api-demo)
+Node library we based our work on by [Armax](https://github.com/Armax/Pokemon-GO-node-api)
+Pokemon Go Map code we learned from by [AHAAAAAAA](https://github.com/AHAAAAAAA/PokemonGo-Map)
+
 # Disclaimer
 
 The used API wrapper uses an unofficial Niantic API. They might block you for using this. Therefore it is not recommended to use this or any other API with your actual account.
