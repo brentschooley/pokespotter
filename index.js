@@ -150,7 +150,8 @@ function Pokespotter(username, password, provider) {
   }
 
   return {
-    get: get
+    get: get,
+    getNearBy: get
   };
 }
 
