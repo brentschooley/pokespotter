@@ -15,11 +15,14 @@
     "pokemon",
     "go"
   ],
-  "author": "Brent Schooley and Dominik Kundel",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/brentschooley/pokespotter/issues"
   },
+  "contributors": [
+    "Dominik Kundel <dominik.kundel@gmail.com>",
+    "Brent Schooley"
+  ],
   "homepage": "https://github.com/brentschooley/pokespotter#readme",
   "dependencies": {
     "body-parser": "^1.15.2",
