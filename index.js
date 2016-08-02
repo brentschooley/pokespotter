@@ -127,18 +127,18 @@ function Pokespotter(users, password, provider) {
       return Q.reject(new Error('Invalid coordinates. Must contain longitude and latitude'));
     }
 
-    function searchLocation(spotter, locs) {
+    function searchLocation(spotter, locs, baseLocation) {
       if (locs.length === 0 || !locs[0]) {
         return Q([]);
       }
 
-      var result = spotter.get(locs[0], options);
+      var result = spotter.get(locs[0], baseLocation, options);
       var pokemonList = [];
       locs.forEach(function (loc, idx) {
         if (idx !== 0) {
           result = result.then(function () {
             return delayExecution(utils.API_LIMIT_TIME).then(function () {
-              return spotter.get(loc, options);
+              return spotter.get(loc, baseLocation, options);
             });
           });
         }
@@ -170,7 +170,7 @@ function Pokespotter(users, password, provider) {
       }
 
       if (spotters.length === 1) {
-        searchPromises = [searchLocation(spotters[0], locations)];
+        searchPromises = [searchLocation(spotters[0], locations, baseLocation)];
       } else if (spotters.length === locations.length) {
         searchPromises = spotters.map(function (spotter, idx) {
           return spotter.get(locations[idx], options);
@@ -182,7 +182,7 @@ function Pokespotter(users, password, provider) {
         }
 
         searchPromises = spotterJobs.map(function (job, idx) {
-          return searchLocation(spotters[idx], job);
+          return searchLocation(spotters[idx], job, baseLocation);
         });
       }
 
