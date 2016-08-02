@@ -173,7 +173,7 @@ function Pokespotter(users, password, provider) {
         searchPromises = [searchLocation(spotters[0], locations, baseLocation)];
       } else if (spotters.length === locations.length) {
         searchPromises = spotters.map(function (spotter, idx) {
-          return spotter.get(locations[idx], options);
+          return spotter.get(locations[idx], baseLocation, options);
         });
       } else {
         var spotterJobs = new Array(spotters.length);
