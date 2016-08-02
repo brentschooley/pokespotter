@@ -1,3 +1,7 @@
+# 0.1.2
+
+* Fixed search with optimal number of accounts
+
 # 0.1.1
 
 * Fixed location distances from origin point
