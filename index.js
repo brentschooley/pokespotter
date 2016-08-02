@@ -121,7 +121,7 @@ function Pokespotter(users, password, provider) {
           latitude: result.latitude
         };
       });
-    } else if (location.longitude && location.latitude) {
+    } else if (typeof location.longitude !== 'undefined' && typeof location.latitude !== 'undefined') {
       getLocation = Q.when(location);
     } else {
       return Q.reject(new Error('Invalid coordinates. Must contain longitude and latitude'));
