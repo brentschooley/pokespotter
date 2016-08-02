@@ -1,3 +1,7 @@
+# 0.1.3
+
+* Fixed location error when passed 0,0 as coordinates
+
 # 0.1.2
 
 * Fixed search with optimal number of accounts
